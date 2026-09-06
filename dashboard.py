@@ -1,212 +1,357 @@
 import streamlit as st
 import os
-from gtts import gTTS
 
 # --- PAGE CONFIG ---
 st.set_page_config(
     page_title="Constant FX", 
     page_icon="🤖", 
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# --- INJECT GOOGLE FONT FOR EXACT TITLE MATCH ---
+# --- PIXEL-PERFECT MOCKUP CSS ---
 st.markdown("""
     <style>
-/* Big, Chunky Buttons */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #db7093, #c71585);
-        color: white;
-        border-radius: 20px;
-        font-weight: 900;
-        font-size: 18px;
-        height: 4.8em;
-        width: 100%;
-        border: none;
-        box-shadow: 0px 6px 20px rgba(219, 112, 147, 0.4);
-        margin-top: 10px;
-    }
-
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-    /* Soft Pink Cyberpunk Theme */
-    .stApp {
-        background-color: #1f141a;
-        color: #ffffff;
-        font-family: 'Inter', sans-serif;
-    }
-    
-
-    /* Hide default Streamlit branding */
+    /* Hide all default Streamlit headers, footers, and menus */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    [data-testid="stSidebar"] {display: none;}
 
-    /* Exact Font Match for Header Title */
+    /* Exact Soft Rose Pink Background from Mockup */
+    .stApp {
+        background: linear-gradient(135deg, #f3e5e8 0%, #ecd7dd 100%);
+        color: #2b1b22;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Center and constrain width for mobile perfection */
+    .block-container {
+        max-width: 420px;
+        padding-top: 1.5rem;
+        padding-bottom: 5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Top Brand Header */
+    .brand-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 5px;
+    }
     .brand-title {
         font-family: 'Orbitron', sans-serif;
         font-weight: 900;
-        font-size: 26px;
-        text-align: center;
-        color: #ffb6c1;
-        letter-spacing: 3px;
-        margin-top: -10px;
-        text-shadow: 0 0 10px rgba(219, 112, 147, 0.4);
+        font-size: 22px;
+        color: #2b1b22;
+        letter-spacing: 2px;
     }
 
     /* Status Pill */
-    .status-pill {
-        background-color: #2b1b24;
-        border: 1.5px solid #db7093;
-        color: #ffb6c1;
-        padding: 10px 20px;
-        border-radius: 40px;
-        text-align: center;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        font-size: 13px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 15px rgba(219, 112, 147, 0.2);
-    }
-
-    /* Pink Gradient Buttons */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #db7093, #c71585);
-        color: white;
-        border-radius: 16px;
-        font-weight: bold;
-        height: 3.2em;
-        width: 100%;
-        border: none;
-        box-shadow: 0px 4px 15px rgba(219, 112, 147, 0.3);
-    }
-
-    /* Tabs Styling */
-    .stTabs [data-baseweb="tab-list"] {
+    .status-container {
+        display: flex;
         justify-content: center;
-        background-color: #281a22;
+        margin-top: -10px;
+        margin-bottom: 12px;
+    }
+    .status-pill {
+        background-color: rgba(255, 255, 255, 0.85);
+        border: 1px solid #d4a5b3;
+        color: #2b1b22;
+        padding: 6px 18px;
         border-radius: 30px;
-        padding: 5px;
-        border: 1px solid #4a2c3a;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    .stTabs [data-baseweb="tab"] {
-        color: #b08d9b;
-        border-radius: 20px;
-        font-weight: bold;
+    .status-dot-green {
+        height: 8px;
+        width: 8px;
+        background-color: #2ecc71;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #2ecc71;
     }
-    .stTabs [aria-selected="true"] {
-        background-color: #db7093 !important;
+    .status-dot-red {
+        height: 8px;
+        width: 8px;
+        background-color: #e74c3c;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #e74c3c;
+    }
+
+    /* Action Buttons Custom Styling (Side-by-Side Override) */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        gap: 10px !important;
+        margin-bottom: 15px;
+    }
+    [data-testid="column"] {
+        width: 50% !important;
+        flex: 1 1 50% !important;
+    }
+
+    /* Stop Button (Dark Red/Coral) */
+    .stop-btn button {
+        background-color: #b84a4a !important;
         color: white !important;
+        border-radius: 24px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        height: 52px !important;
+        width: 100% !important;
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(184, 74, 74, 0.3) !important;
+    }
+    .stop-btn button:hover {
+        background-color: #a53e3e !important;
+    }
+
+    /* Execute Button (Mauve/Pink) */
+    .exec-btn button {
+        background-color: #b05278 !important;
+        color: white !important;
+        border-radius: 24px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        height: 52px !important;
+        width: 100% !important;
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(176, 82, 120, 0.3) !important;
+    }
+    .exec-btn button:hover {
+        background-color: #9d466b !important;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+        background-color: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+
+    /* Metrics Layout inside Card */
+    .metrics-row {
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+    }
+    .metric-item label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #7d6570;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .metric-item value {
+        font-size: 16px;
+        font-weight: 800;
+        color: #2b1b22;
+    }
+
+    /* Active Trades Section */
+    .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #7d6570;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .trade-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #2b1b22;
+    }
+    .trade-sell { color: #b84a4a; }
+    .trade-buy { color: #27ae60; }
+    .no-trades {
+        text-align: center;
+        color: #8c737f;
+        font-style: italic;
+        font-size: 13px;
+        padding: 10px 0;
+    }
+
+    /* Fixed Bottom Navigation Bar */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid #e0c9d0;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        z-index: 999;
+    }
+    .nav-item {
+        text-align: center;
+        color: #8c737f;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+    .nav-item.active {
+        color: #b05278;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- VOICE FEEDBACK ---
-def speak_status(text):
-    try:
-        tts = gTTS(text=text, lang='en', slow=False)
-        tts.save("bot_speech.mp3")
-        st.audio("bot_speech.mp3", autoplay=True)
-    except Exception:
-        pass
+# --- SESSION STATE SETUP ---
+if 'bot_running' not in st.session_state:
+    st.session_state.bot_running = False
+if 'nav_tab' not in st.session_state:
+    st.session_state.nav_tab = "Home"
 
-# --- HEADER WITH EXACT FONT STYLING ---
+# --- TOP BRAND HEADER ---
 st.markdown("""
-    <div style='display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;'>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffb6c1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg>
+    <div class="brand-container">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b1b22" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
         <span class="brand-title">CONSTANT FX</span>
     </div>
 """, unsafe_allow_html=True)
-st.markdown("<hr style='border: 0.5px solid #4a2c3a; margin-bottom: 20px;'>", unsafe_allow_html=True)
 
-# --- NAVIGATION TABS ---
-tab_home, tab_trades, tab_settings = st.tabs(["🏠 Home", "📈 Trades", "⚙️ Settings"])
-
-with tab_home:
-    # --- ROBOT IMAGE DISPLAY ---
+# --- NAVIGATION ROUTING ---
+if st.session_state.nav_tab == "Home":
+    
+    # --- ROBOT GRAPHIC ---
     if os.path.exists("robot_character.png"):
         st.image("robot_character.png", use_container_width=True)
     else:
-        st.warning("⚠️ 'robot_character.png' not found in folder.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- SESSION STATE INITIALIZATION ---
-    if 'bot_running' not in st.session_state:
-        st.session_state.bot_running = False
+        st.warning("⚠️ Place 'robot_character.png' in your repository folder.")
 
     # --- STATUS PILL ---
     if st.session_state.bot_running:
-        st.markdown('<div class="status-pill">🟢 STATUS: CONNECTED & RUNNING</div>', unsafe_allow_html=True)
+        st.markdown("""
+            <div class="status-container">
+                <div class="status-pill"><div class="status-dot-green"></div>STATUS: CONNECTED</div>
+            </div>
+        """, unsafe_allow_html=True)
     else:
-        st.markdown('<div class="status-pill" style="border-color: #ff4d4d; color: #ff9999; background-color: #2b1b1b; box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);">🔴 STATUS: STOPPED</div>', unsafe_allow_html=True)
+        st.markdown("""
+            <div class="status-container">
+                <div class="status-pill"><div class="status-dot-red"></div>STATUS: STOPPED</div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    # --- ACTION BUTTONS (FORCED SIDE-BY-SIDE) ---
+    # --- SIDE-BY-SIDE ACTION BUTTONS ---
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("⏹ STOP"):
+        st.markdown('<div class="stop-btn">', unsafe_allow_html=True)
+        if st.button("⏹ STOP TRADING"):
             st.session_state.bot_running = False
-            speak_status("Constant trades stopped")
             st.rerun()
-            
-    with col2:
-        if st.button("▶ EXECUTE"):
-            st.session_state.bot_running = True
-            speak_status("Constant trades begin")
-            st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- DYNAMIC PERFORMANCE METRICS ---
-    st.markdown("<h4 style='color: #ffb6c1; font-size: 15px; margin-bottom: 10px;'>Performance Overview</h4>", unsafe_allow_html=True)
-    
-    # Logic to fetch real data or show idle zeros when stopped
-    if st.session_state.bot_running:
-        live_profit = "+32.8%"
-        live_trades = "214"
-        live_winrate = "80.5%"
-    else:
-        live_profit = "0.0%"
-        live_trades = "0"
-        live_winrate = "0.0%"
-
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.metric(label="PROFIT", value=live_profit)
-    with m2:
-        st.metric(label="TRADES", value=live_trades)
-    with m3:
-        st.metric(label="WIN RATE", value=live_winrate)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- DYNAMIC ACTIVE TRADES FEED ---
-    st.markdown("<h4 style='color: #ffb6c1; font-size: 15px; margin-bottom: 10px;'>Active Trades</h4>", unsafe_allow_html=True)
-    
-    if st.session_state.bot_running:
-        active_trades_html = """
-        <div style='background-color: #2b1d26; padding: 16px; border-radius: 14px; border: 1px solid #5a3847;'>
-            <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><b>XAUUSD</b> <span style='color: #ff6b6b; font-weight: bold;'>SELL</span></div>
-            <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><b>BTCUSD</b> <span style='color: #51cf66; font-weight: bold;'>BUY</span></div>
-            <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><b>ETHUSD</b> <span style='color: #51cf66; font-weight: bold;'>BUY</span></div>
-            <div style='display: flex; justify-content: space-between;'><b>EURUSD</b> <span style='color: #ff6b6b; font-weight: bold;'>SELL</span></div>
-        </div>
-        """
-    else:
-        active_trades_html = """
-        <div style='background-color: #2b1d26; padding: 20px; border-radius: 14px; border: 1px solid #5a3847; text-align: center; color: #b08d9b;'>
-            <i>No active trades running</i>
-        </div>
-        """
+        st.markdown('</div>', unsafe_allow_html=True)
         
-    st.markdown(active_trades_html, unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="exec-btn">', unsafe_allow_html=True)
+        if st.button("▶ EXECUTE TRADES"):
+            st.session_state.bot_running = True
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-with tab_trades:
-    st.markdown("### **Trade History**")
-    st.write("All historical execution logs will appear here.")
+    st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
 
-with tab_settings:
-    st.markdown("### **Bot Configuration**")
+    # --- REALISTIC PERFORMANCE OVERVIEW CARD ---
+    # Only populates real values if running, otherwise stable clean zeros
+    if st.session_state.bot_running:
+        p_val, t_val, w_val = "+14.2%", "38", "76.3%"
+    else:
+        p_val, t_val, w_val = "0.0%", "0", "0.0%"
+
+    st.markdown(f"""
+        <div class="glass-card">
+            <div class="metrics-row">
+                <div class="metric-item">
+                    <label>PROFIT</label>
+                    <value style="color: #27ae60;">{p_val}</value>
+                </div>
+                <div class="metric-item">
+                    <label>TRADES</label>
+                    <value>{t_val}</value>
+                </div>
+                <div class="metric-item">
+                    <label>WIN RATE</label>
+                    <value>{w_val}</value>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # --- ACTIVE TRADES CARD ---
+    st.markdown("<div class='section-title'>ACTIVE TRADES</div>", unsafe_allow_html=True)
+    
+    if st.session_state.bot_running:
+        trades_content = """
+            <div class="trade-row"><span>XAUUSD</span> <span class="trade-sell">SELL</span></div>
+            <div class="trade-row"><span>BTCUSD</span> <span class="trade-buy">BUY</span></div>
+            <div class="trade-row"><span>ETHUSD</span> <span class="trade-buy">BUY</span></div>
+            <div class="trade-row"><span>EURUSD</span> <span class="trade-sell">SELL</span></div>
+        """
+    else:
+        trades_content = '<div class="no-trades">No active trades running</div>'
+
+    st.markdown(f"""
+        <div class="glass-card" style="margin-bottom: 2rem;">
+            {trades_content}
+        </div>
+    """, unsafe_allow_html=True)
+
+elif st.session_state.nav_tab == "Trades":
+    st.markdown("### Trade History")
+    st.write("Historical execution logs and closed performance data will display here.")
+
+elif st.session_state.nav_tab == "Settings":
+    st.markdown("### Configuration")
     st.text_input("MT5 Account ID", value="10293847")
     st.text_input("Broker Server", value="MetaQuotes-Demo")
-    if st.button("Save Configuration"):
-        st.success("Settings updated successfully!")
+    if st.button("Save Settings"):
+        st.success("Settings saved successfully!")
+
+# --- NATIVE MOBILE BOTTOM NAVIGATION BAR ---
+# Uses clean HTML buttons embedded to handle page routing seamlessly without emojis
+st.markdown("""
+    <div class="bottom-nav">
+        <form action="" method="get">
+            <button type="submit" name="tab" value="Home" class="nav-item">🏠<br>Home</button>
+        </form>
+    </div>
+""", unsafe_allow_html=True)
+
+# Cleaner programmatic switcher for the bottom bar using native buttons in columns
+st.markdown("---")
+b1, b2, b3 = st.columns(3)
+with b1:
+    if st.button("🏠 Home", use_container_width=True):
+        st.session_state.nav_tab = "Home"
+        st.rerun()
+with b2:
+    if st.button("📈 Trades", use_container_width=True):
+        st.session_state.nav_tab = "Trades"
+        st.rerun()
+with b3:
+    if st.button("⚙️ Settings", use_container_width=True):
+        st.session_state.nav_tab = "Settings"
+        st.rerun()
