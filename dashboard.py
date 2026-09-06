@@ -94,7 +94,7 @@ st.markdown("""
 
     /* Force Stop Button Styling (Prevents mobile dark-mode override) */
     div.stButton > button[kind="secondary"] {
-        background-color: #b84a4a !important;
+        background-color: #2ecc71 !important;
         color: #ffffff !important;
         border-radius: 20px !important;
         font-weight: 700 !important;
@@ -107,7 +107,7 @@ st.markdown("""
 
     /* Force Execute Button Styling */
     div.stButton > button[kind="primary"], div.stButton > button {
-        background-color: #b05278 !important;
+        background-color: #160e12 !important;
         color: #ffffff !important;
         border-radius: 20px !important;
         font-weight: 700 !important;
