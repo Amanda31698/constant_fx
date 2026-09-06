@@ -12,17 +12,18 @@ st.set_page_config(
 # --- INJECT GOOGLE FONT FOR EXACT TITLE MATCH ---
 st.markdown("""
     <style>
-/* Force columns to stay side-by-side on mobile phones */
-    @media (max-width: 768px) {
-        [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-        }
-        [data-testid="column"] {
-            width: 48% !important;
-            flex: 1 1 48% !important;
-            min-width: unset !important;
-        }
+/* Big, Chunky Buttons */
+    div.stButton > button:first-child {
+        background: linear-gradient(135deg, #db7093, #c71585);
+        color: white;
+        border-radius: 20px;
+        font-weight: 900;
+        font-size: 18px;
+        height: 4.8em;
+        width: 100%;
+        border: none;
+        box-shadow: 0px 6px 20px rgba(219, 112, 147, 0.4);
+        margin-top: 10px;
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
