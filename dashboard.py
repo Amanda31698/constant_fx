@@ -12,6 +12,19 @@ st.set_page_config(
 # --- INJECT GOOGLE FONT FOR EXACT TITLE MATCH ---
 st.markdown("""
     <style>
+/* Force columns to stay side-by-side on mobile phones */
+    @media (max-width: 768px) {
+        [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        [data-testid="column"] {
+            width: 48% !important;
+            flex: 1 1 48% !important;
+            min-width: unset !important;
+        }
+    }
+
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
 
     /* Soft Pink Cyberpunk Theme */
@@ -20,6 +33,7 @@ st.markdown("""
         color: #ffffff;
         font-family: 'Inter', sans-serif;
     }
+    
 
     /* Hide default Streamlit branding */
     #MainMenu {visibility: hidden;}
