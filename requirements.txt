@@ -1,0 +1,5 @@
+streamlit
+gTTS
+MetaTrader5
+pandas
+requests
