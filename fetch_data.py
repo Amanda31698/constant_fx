@@ -1,5 +1,6 @@
 import os
 import asyncio
+import json
 from datetime import datetime, timezone
 
 import MetaTrader5 as mt5
@@ -15,6 +16,16 @@ load_dotenv()  # TELEGRAM_TOKEN and TELEGRAM_CHAT_ID live in a .env file, not he
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+# --- JSON STATE BRIDGE HELPER ---
+def update_dashboard_state(bot_running, active_trades_list):
+    state = {
+        "bot_running": bot_running,
+        "active_trades": active_trades_list
+    }
+    with open("bot_state.json", "w") as f:
+        json.dump(state, f)
+
 
 SYMBOLS = ["EURUSD", "XAUUSD"]
 
@@ -326,6 +337,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.edit_message_text(f"❌ Execution failed for {symbol}. Check terminal logs.")
 
+update_dashboard_state(True, [{"symbol": symbol, "action": signal["action"], "lot": "0.10"}])
+            
+        else:
 
 # --- 8. PERIODIC SCAN JOB ---
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE):
