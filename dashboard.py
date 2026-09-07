@@ -2,7 +2,15 @@ import streamlit as st
 import os
 import json
 
-# --- LOAD JSON STATE BRIDGE ---
+# --- PAGE CONFIG ---
+st.set_page_config(
+    page_title="Constant FX", 
+    page_icon="⚡", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+# --- LOAD LIVE STATE FROM BACKGROUND ENGINE ---
 def load_bot_state():
     if os.path.exists("bot_state.json"):
         try:
@@ -13,27 +21,13 @@ def load_bot_state():
     return {"bot_running": False, "active_trades": []}
 
 state_data = load_bot_state()
-
-# --- SESSION STATE ---
-if 'nav_tab' not in st.session_state:
-    st.session_state.nav_tab = "Home"
-
-# Sync with backend JSON state
 bot_running = state_data.get("bot_running", False)
 active_trades = state_data.get("active_trades", [])
 
-# --- PAGE CONFIG ---
-st.set_page_config(
-    page_title="Constant FX",
-    page_icon="◈",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
-
-# --- CSS ---
+# --- DARK INSTITUTIONAL TERMINAL CSS ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     #MainMenu {visibility: hidden;}
@@ -42,382 +36,206 @@ st.markdown("""
     [data-testid="stSidebar"] {display: none;}
     [data-testid="stToolbar"] {display: none;}
 
-    html, body, [class*="css"] {
+    .stApp {
+        background: radial-gradient(circle at 50% 0%, #1a1e26 0%, #0d0f12 70%);
+        color: #e1e4e8;
         font-family: 'Inter', sans-serif;
     }
 
-    .stApp {
-        background: radial-gradient(120% 100% at 50% 0%, #f6e6ea 0%, #eccdd6 55%, #e3b9c6 100%);
-        color: #2b1622;
-    }
-
     .block-container {
-        max-width: 430px;
-        padding-top: 1.6rem;
-        padding-bottom: 7rem;
-        padding-left: 1.1rem;
-        padding-right: 1.1rem;
+        max-width: 420px;
+        padding-top: 1.5rem;
+        padding-bottom: 6rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
-    /* ---------- BRAND ---------- */
     .brand-container {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
-        margin-bottom: 18px;
-    }
-    .brand-mark {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        border: 2.5px solid #2b1622;
-        position: relative;
-        flex-shrink: 0;
-    }
-    .brand-mark::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 2.5px;
-        height: 14px;
-        background: #2b1622;
-        transform: translate(-50%, -50%) rotate(35deg);
+        margin-bottom: 20px;
     }
     .brand-title {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 800;
-        font-size: 21px;
-        color: #2b1622;
-        letter-spacing: 1.5px;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        color: #ffffff;
+        letter-spacing: 2.5px;
     }
-    .brand-title span {
-        font-weight: 600;
-        color: #a8455e;
-    }
+    .brand-title span { color: #e74c3c; }
 
-    /* ---------- HERO IMAGE ---------- */
     .hero-frame {
-        border-radius: 26px;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 18px 40px -12px rgba(120, 40, 65, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
         margin-bottom: 16px;
-        border: 1px solid rgba(255,255,255,0.6);
     }
 
-    /* ---------- STATUS PILL ---------- */
     .status-container {
         display: flex;
         justify-content: center;
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
     .status-pill {
-        background-color: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.9);
-        color: #2b1622;
-        padding: 8px 20px;
+        background-color: rgba(22, 25, 31, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #8b949e;
+        padding: 6px 16px;
         border-radius: 30px;
         font-weight: 700;
-        font-size: 12px;
-        letter-spacing: 0.6px;
-        box-shadow: 0 6px 16px rgba(120, 40, 65, 0.08);
+        font-size: 11px;
+        letter-spacing: 1.2px;
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
     }
-    .status-dot-green {
-        height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%;
-        box-shadow: 0 0 8px #2ecc71;
-    }
-    .status-dot-red {
-        height: 8px; width: 8px; background-color: #e74c3c; border-radius: 50%;
-        box-shadow: 0 0 8px #e74c3c;
-    }
+    .status-dot-green { height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 8px #2ecc71; }
+    .status-dot-red { height: 8px; width: 8px; background-color: #e74c3c; border-radius: 50%; box-shadow: 0 0 8px #e74c3c; }
 
-    /* ---------- ACTION BUTTONS ---------- */
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]),
-    div[data-testid="stHorizontalBlock"]:has(button[kind="primary"]) {
-        gap: 12px !important;
-        margin-bottom: 18px !important;
-    }
-
-    div.stButton > button[kind="secondary"] {
-        background: linear-gradient(135deg, #d16a5f 0%, #b8483f 100%) !important;
-        color: #ffffff !important;
-        border-radius: 22px !important;
-        font-family: 'Inter', sans-serif !important;
+    /* Single Toggle Button Styling */
+    div.stButton > button {
+        border-radius: 24px !important;
+        font-family: 'Orbitron', sans-serif !important;
         font-weight: 700 !important;
         font-size: 13px !important;
-        letter-spacing: 0.3px;
-        line-height: 1.35 !important;
-        white-space: pre-line !important;
-        height: 58px !important;
+        height: 56px !important;
         width: 100% !important;
-        border: none !important;
-        box-shadow: 0 8px 18px -6px rgba(184, 72, 63, 0.55) !important;
-        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4) !important;
+        transition: all 0.2s ease !important;
+        letter-spacing: 1px;
     }
-    div.stButton > button[kind="secondary"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 20px -6px rgba(184, 72, 63, 0.6) !important;
-    }
-
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #d9557f 0%, #b8305d 100%) !important;
-        color: #ffffff !important;
-        border-radius: 22px !important;
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-size: 13px !important;
-        letter-spacing: 0.3px;
-        line-height: 1.35 !important;
-        white-space: pre-line !important;
-        height: 58px !important;
-        width: 100% !important;
-        border: none !important;
-        box-shadow: 0 8px 18px -6px rgba(184, 48, 93, 0.55) !important;
-        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
-    }
-    div.stButton > button[kind="primary"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 20px -6px rgba(184, 48, 93, 0.6) !important;
-    }
-
-    /* ---------- GLASS CARDS ---------- */
+    
+    /* Glass Cards */
     .glass-card {
-        background-color: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 18px 18px;
+        background-color: rgba(22, 25, 31, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 16px;
         margin-bottom: 14px;
-        box-shadow: 0 10px 26px -12px rgba(120, 40, 65, 0.18);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
 
-    .metrics-row {
-        display: flex;
-        justify-content: space-between;
-        text-align: center;
-    }
-    .metric-item {
-        flex: 1;
-    }
-    .metric-item label {
+    .section-title {
+        font-family: 'Orbitron', sans-serif;
         font-size: 10px;
         font-weight: 700;
-        color: #97788a;
-        letter-spacing: 0.8px;
-        display: block;
-        margin-bottom: 4px;
-    }
-    .metric-item .value {
-        font-family: 'Poppins', sans-serif;
-        font-size: 18px;
-        font-weight: 800;
-        color: #2b1622;
-    }
-    .metric-divider {
-        width: 1px;
-        background: rgba(43, 22, 34, 0.1);
-        margin: 2px 6px;
+        color: #8b949e;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+        margin-left: 4px;
     }
 
-    /* ---------- ACTIVE TRADES ---------- */
-    .section-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: #97788a;
-        letter-spacing: 0.8px;
-        margin: 4px 0 8px 4px;
-    }
     .trade-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 4px;
-        font-size: 13.5px;
-        font-weight: 600;
-        color: #2b1622;
-        border-bottom: 1px solid rgba(43, 22, 34, 0.07);
-    }
-    .trade-item:last-child { border-bottom: none; }
-    .trade-side {
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11.5px;
-        letter-spacing: 0.3px;
-    }
-    .trade-sell { color: #b8483f; background: rgba(184, 72, 63, 0.1); }
-    .trade-buy { color: #27ae60; background: rgba(39, 174, 96, 0.1); }
-    .no-trades {
-        text-align: center;
-        color: #a98da0;
-        font-style: italic;
+        background: rgba(13, 15, 18, 0.6);
+        padding: 10px 14px;
+        border-radius: 10px;
+        margin-bottom: 6px;
         font-size: 13px;
-        padding: 10px 0;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.04);
     }
+    .trade-buy { color: #2ecc71; background: rgba(46, 204, 113, 0.08); padding: 4px 10px; border-radius: 6px; font-size: 11px; }
+    .trade-sell { color: #e74c3c; background: rgba(231, 76, 60, 0.08); padding: 4px 10px; border-radius: 6px; font-size: 11px; }
+    .no-trades { text-align: center; color: #484f58; font-style: italic; font-size: 12px; padding: 10px 0; }
 
-    /* ---------- BOTTOM NAV ---------- */
-    .nav-spacer { height: 8px; }
+    /* Bottom Nav Bar */
     .st-key-bottom_nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-width: 430px;
-        margin: 0 auto;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(14px);
-        border-top: 1px solid rgba(43,22,34,0.06);
-        border-radius: 22px 22px 0 0;
-        padding: 10px 14px 16px 14px;
-        box-shadow: 0 -8px 24px rgba(120, 40, 65, 0.08);
-        z-index: 999;
-    }
-    .st-key-bottom_nav div[data-testid="stHorizontalBlock"] {
-        gap: 6px !important;
+        position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto;
+        background: rgba(13, 15, 18, 0.9); backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(255,255,255,0.08); border-radius: 20px 20px 0 0;
+        padding: 8px 12px 14px 12px; z-index: 999;
     }
     .st-key-bottom_nav button {
-        background: transparent !important;
-        border: none !important;
-        color: #a98da0 !important;
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 600 !important;
-        font-size: 11.5px !important;
-        line-height: 1.3 !important;
-        white-space: pre-line !important;
+        background: transparent !important; border: none !important; color: #8b949e !important;
+        font-family: 'Inter', sans-serif !important; font-size: 11px !important; height: 42px !important;
         box-shadow: none !important;
-        height: 48px !important;
     }
-    .st-key-bottom_nav button:hover {
-        color: #b8305d !important;
-    }
-
-    h3 { font-family: 'Poppins', sans-serif; color: #2b1622; }
+    .st-key-bottom_nav button:hover { color: #ffffff !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SESSION STATE ---
-if 'bot_running' not in st.session_state:
-    st.session_state.bot_running = False
 if 'nav_tab' not in st.session_state:
     st.session_state.nav_tab = "Home"
 
 # --- BRAND HEADER ---
 st.markdown("""
     <div class="brand-container">
-        <div class="brand-mark"></div>
         <span class="brand-title">CONSTANT <span>FX</span></span>
     </div>
 """, unsafe_allow_html=True)
 
-# --- CONTENT ROUTING ---
+# --- HOME TAB ---
 if st.session_state.nav_tab == "Home":
-
-    st.markdown('<div class="hero-frame">', unsafe_allow_html=True)
+    
     if os.path.exists("robot_character.png"):
+        st.markdown('<div class="hero-frame">', unsafe_allow_html=True)
         st.image("robot_character.png", use_container_width=True)
-    else:
-        st.warning("Place 'robot_character.png' in the repository root.")
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.session_state.bot_running:
-        st.markdown("""
-            <div class="status-container">
-                <div class="status-pill"><div class="status-dot-green"></div>STATUS: CONNECTED</div>
-            </div>
-        """, unsafe_allow_html=True)
+    if bot_running:
+        st.markdown('<div class="status-container"><div class="status-pill"><div class="status-dot-green"></div>SYSTEM ONLINE</div></div>', unsafe_allow_html=True)
     else:
-        st.markdown("""
-            <div class="status-container">
-                <div class="status-pill"><div class="status-dot-red"></div>STATUS: STOPPED</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="status-container"><div class="status-pill"><div class="status-dot-red"></div>SYSTEM STOPPED</div></div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("■\nSTOP TRADING", key="stop_btn", type="secondary"):
-            st.session_state.bot_running = False
+    # --- SINGLE TOGGLE BUTTON ---
+    if bot_running:
+        if st.button("⏹ STOP ENGINE", type="secondary"):
+            # Update state to stopped and clear active trades display
+            with open("bot_state.json", "w") as f:
+                json.dump({"bot_running": False, "active_trades": []}, f)
             st.rerun()
-    with col2:
-        if st.button("▶\nEXECUTE TRADES", key="exec_btn", type="primary"):
-            st.session_state.bot_running = True
+    else:
+        if st.button("▶ START ENGINE", type="primary"):
+            # Update state to running
+            with open("bot_state.json", "w") as f:
+                json.dump({"bot_running": True, "active_trades": [{"symbol": "EURUSD", "action": "BUY", "lot": "0.10"}]}, f)
             st.rerun()
 
-    p_val = "+14.2%" if st.session_state.bot_running else "0.0%"
-    t_val = "38" if st.session_state.bot_running else "0"
-    w_val = "76.3%" if st.session_state.bot_running else "0.0%"
-
-    st.markdown(f"""
-        <div class="glass-card">
-            <div class="metrics-row">
-                <div class="metric-item">
-                    <label>PROFIT</label>
-                    <div class="value" style="color: #27ae60;">{p_val}</div>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <label>TRADES</label>
-                    <div class="value">{t_val}</div>
-                </div>
-                <div class="metric-divider"></div>
-                <div class="metric-item">
-                    <label>WIN RATE</label>
-                    <div class="value">{w_val}</div>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div class='section-title'>ACTIVE TRADES</div>", unsafe_allow_html=True)
-
+    st.markdown("<div class='section-title' style='margin-top: 16px;'>ACTIVE POSITIONS</div>", unsafe_allow_html=True)
+    
     if bot_running and active_trades:
         trades_html = ""
-        for trade in active_trades:
-            side_class = "trade-buy" if trade.get("action") == "BUY" else "trade-sell"
-            trades_html += f'<div class="trade-item"><span>{trade.get("symbol")}</span> <span class="trade-side {side_class}">{trade.get("action")} {trade.get("lot")} lot</span></div>'
+        for t in active_trades:
+            side_cls = "trade-buy" if t.get('action') == "BUY" else "trade-sell"
+            trades_html += f'<div class="trade-item"><span style="font-weight: 700; color: #fff;">{t.get("symbol")}</span> <span class="{side_cls}">{t.get("action")} {t.get("lot")}</span></div>'
     else:
-        trades_html = '<div class="no-trades">No active trades running</div>'
+        trades_html = '<div class="no-trades">No active execution threads</div>'
 
-    st.markdown(f"""
-        <div class="glass-card" style="margin-bottom: 2rem;">
-            {trades_html}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="glass-card" style="margin-bottom: 2rem;">{trades_html}</div>', unsafe_allow_html=True)
 
 elif st.session_state.nav_tab == "Trades":
-    st.markdown("### Trade History")
-    st.markdown("""
-        <div class="glass-card">
-            <div class="no-trades">Closed trade execution logs will appear here.</div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### **Execution Logs**")
+    st.markdown('<div class="glass-card"><div class="no-trades">Historical audit trail empty.</div></div>', unsafe_allow_html=True)
 
 elif st.session_state.nav_tab == "Settings":
-    st.markdown("### Configuration")
+    st.markdown("### **Terminal Config**")
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.text_input("MT5 Account ID", value="10293847")
-    st.text_input("Broker Server", value="MetaQuotes-Demo")
-    if st.button("Save Settings"):
-        st.success("Settings saved successfully!")
+    st.text_input("Broker Gateway", value="MetaQuotes-Demo")
+    if st.button("Save Parameters"):
+        st.success("Config saved successfully.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- BOTTOM NAVIGATION ---
-st.markdown("<div class='nav-spacer'></div>", unsafe_allow_html=True)
+# --- BOTTOM NAVIGATION BAR ---
 with st.container(key="bottom_nav"):
     nav1, nav2, nav3 = st.columns(3)
     with nav1:
-        if st.button("🏠\nHome", key="nav_home", use_container_width=True):
+        if st.button("🏠 Home", use_container_width=True):
             st.session_state.nav_tab = "Home"
             st.rerun()
     with nav2:
-        if st.button("📈\nTrades", key="nav_trades", use_container_width=True):
+        if st.button("📈 Trades", use_container_width=True):
             st.session_state.nav_tab = "Trades"
             st.rerun()
     with nav3:
-        if st.button("⚙️\nSettings", key="nav_settings", use_container_width=True):
+        if st.button("⚙️ Settings", use_container_width=True):
             st.session_state.nav_tab = "Settings"
-            st.rerun() 
+            st.rerun()
