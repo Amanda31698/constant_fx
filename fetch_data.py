@@ -17,11 +17,24 @@ load_dotenv()  # TELEGRAM_TOKEN and TELEGRAM_CHAT_ID live in a .env file, not he
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# --- JSON STATE BRIDGE HELPER ---
-def update_dashboard_state(bot_running, active_trades_list):
+# --- MULTI-TRADE JSON STATE BRIDGE ---
+def update_dashboard_state(bot_running, new_trade=None):
+    # Load existing state first to preserve active positions
+    existing_trades = []
+    if os.path.exists("bot_state.json"):
+        try:
+            with open("bot_state.json", "r") as f:
+                data = json.load(f)
+                existing_trades = data.get("active_trades", [])
+        except:
+            pass
+            
+    if new_trade:
+        existing_trades.append(new_trade)
+        
     state = {
         "bot_running": bot_running,
-        "active_trades": active_trades_list
+        "active_trades": existing_trades
     }
     with open("bot_state.json", "w") as f:
         json.dump(state, f)
@@ -334,12 +347,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if result is not None and result.retcode == mt5.TRADE_RETCODE_DONE:
             await query.edit_message_text(f"✅ Executed {signal['action']} on {symbol}.")
-        else:
-            await query.edit_message_text(f"❌ Execution failed for {symbol}. Check terminal logs.")
-
-update_dashboard_state(True, [{"symbol": symbol, "action": signal["action"], "lot": "0.10"}])
             
-        else:
+            # Appends the new trade to the list (allows 2, 3, or more concurrent trades)
+            update_dashboard_state(True, {"symbol": symbol, "action": signal["action"], "lot": "0.10"})
 
 # --- 8. PERIODIC SCAN JOB ---
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE):
