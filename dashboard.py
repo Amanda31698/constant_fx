@@ -1,5 +1,26 @@
 import streamlit as st
 import os
+import json
+
+# --- LOAD JSON STATE BRIDGE ---
+def load_bot_state():
+    if os.path.exists("bot_state.json"):
+        try:
+            with open("bot_state.json", "r") as f:
+                return json.load(f)
+        except:
+            pass
+    return {"bot_running": False, "active_trades": []}
+
+state_data = load_bot_state()
+
+# --- SESSION STATE ---
+if 'nav_tab' not in st.session_state:
+    st.session_state.nav_tab = "Home"
+
+# Sync with backend JSON state
+bot_running = state_data.get("bot_running", False)
+active_trades = state_data.get("active_trades", [])
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -353,12 +374,11 @@ if st.session_state.nav_tab == "Home":
 
     st.markdown("<div class='section-title'>ACTIVE TRADES</div>", unsafe_allow_html=True)
 
-    if st.session_state.bot_running:
-        trades_html = """
-            <div class="trade-item"><span>XAUUSD</span> <span class="trade-side trade-sell">SELL 0.50 lot</span></div>
-            <div class="trade-item"><span>BTCUSD</span> <span class="trade-side trade-buy">BUY 0.10 lot</span></div>
-            <div class="trade-item"><span>EURUSD</span> <span class="trade-side trade-sell">SELL 1.00 lot</span></div>
-        """
+    if bot_running and active_trades:
+        trades_html = ""
+        for trade in active_trades:
+            side_class = "trade-buy" if trade.get("action") == "BUY" else "trade-sell"
+            trades_html += f'<div class="trade-item"><span>{trade.get("symbol")}</span> <span class="trade-side {side_class}">{trade.get("action")} {trade.get("lot")} lot</span></div>'
     else:
         trades_html = '<div class="no-trades">No active trades running</div>'
 
@@ -400,4 +420,4 @@ with st.container(key="bottom_nav"):
     with nav3:
         if st.button("⚙️\nSettings", key="nav_settings", use_container_width=True):
             st.session_state.nav_tab = "Settings"
-            st.rerun()
+            st.rerun() 
