@@ -103,6 +103,12 @@ st.markdown("""
         font-size: 13px !important;
         height: 56px !important;
         width: 100% !important;
+        max-width: 360px !important; /* Adjust this to make it narrower/wider */
+        margin: 0 auto !important;     /* Centers the button block itself */
+        display: block !important;
+        text-align: center !important; /* Centers the text inside */
+        justify-content: center !important;
+        align-items: center !important;
         border: 1px solid rgba(255,255,255,0.15) !important;
         box-shadow: 0 8px 20px rgba(0,0,0,0.4) !important;
         transition: all 0.2s ease !important;
